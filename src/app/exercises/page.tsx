@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Dumbbell, Plus } from 'lucide-react';
 
 export default async function ExercisesPage() {
-    let exercises = [];
+    let exercises: any[] = [];
     try {
         exercises = await prisma.exercise.findMany({
             include: { _count: { select: { results: true } } }

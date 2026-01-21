@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { UserPlus } from 'lucide-react';
 
 export default async function PlayersPage() {
-    let players = [];
+    let players: any[] = [];
     try {
         players = await prisma.player.findMany({
             orderBy: { firstName: 'asc' }
