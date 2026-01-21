@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { Users, Activity, TrendingUp } from 'lucide-react';
 import { Suspense } from 'react';
 
-// Components
 import { PlayerCard } from '@/components/PlayerCard';
 import { StatCard } from '@/components/StatCard';
 

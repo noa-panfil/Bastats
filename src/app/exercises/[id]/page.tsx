@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
-import { ProgressChart } from '@/components/ProgressChart';
+import { ExerciseAnalytics } from '@/components/ExerciseAnalytics';
 import { ExerciseSessionLogger } from '@/components/ExerciseSessionLogger';
+import { ExerciseLeaderboard } from '@/components/ExerciseLeaderboard';
 import Link from 'next/link';
 
 export default async function ExerciseDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -11,37 +12,19 @@ export default async function ExerciseDetailsPage({ params }: { params: Promise<
         where: { id: exerciseId },
         include: {
             results: {
+                include: { player: true },
                 orderBy: { date: 'asc' }
             }
         }
     });
 
-    const players = await prisma.player.findMany({
+    const playersList = await prisma.player.findMany({
         orderBy: { firstName: 'asc' }
     });
 
     if (!exercise) {
         return <div className="container" style={{ padding: '4rem' }}>Exercise not found</div>;
     }
-
-    // Calculate Team Average Progress
-    // Group by date, average the values
-    const dateMap = new Map<string, { sum: number, count: number }>();
-
-    exercise.results.forEach((r: any) => {
-        const dateStr = r.date.toLocaleDateString();
-        if (!dateMap.has(dateStr)) {
-            dateMap.set(dateStr, { sum: 0, count: 0 });
-        }
-        const entry = dateMap.get(dateStr)!;
-        entry.sum += r.value;
-        entry.count += 1;
-    });
-
-    const chartData = Array.from(dateMap.entries()).map(([date, { sum, count }]) => ({
-        date,
-        value: parseFloat((sum / count).toFixed(2))
-    }));
 
     return (
         <main className="container animate-fade-in" style={{ padding: '4rem 1.5rem' }}>
@@ -60,19 +43,17 @@ export default async function ExerciseDetailsPage({ params }: { params: Promise<
                     fontSize: '0.9rem',
                     fontWeight: 600
                 }}>
-                    Avg Breakdown
+                    Analytics
                 </div>
             </div>
 
             <div style={{ marginBottom: '4rem' }}>
-                <ProgressChart
-                    title="Team Average Progress"
-                    data={chartData}
-                    color="hsl(var(--accent))"
-                />
+                <ExerciseAnalytics exercise={exercise} players={playersList} />
             </div>
 
-            <ExerciseSessionLogger exercise={exercise} players={players} />
+            <ExerciseSessionLogger exercise={exercise} players={playersList} />
+
+            <ExerciseLeaderboard results={exercise.results} unit={exercise.unit} />
 
         </main>
     );

@@ -27,17 +27,24 @@ export async function addResult(formData: FormData) {
     const playerId = parseInt(formData.get('playerId') as string);
     const exerciseId = parseInt(formData.get('exerciseId') as string);
     const value = parseFloat(formData.get('value') as string);
+    const dateStr = formData.get('date') as string;
 
     if (!playerId || !exerciseId || isNaN(value)) {
         throw new Error("Invalid input");
     }
 
+    const data: any = {
+        playerId,
+        exerciseId,
+        value
+    };
+
+    if (dateStr) {
+        data.date = new Date(dateStr);
+    }
+
     await prisma.result.create({
-        data: {
-            playerId,
-            exerciseId,
-            value
-        }
+        data
     });
 
     revalidatePath(`/players/${playerId}`);
@@ -79,12 +86,10 @@ export async function deletePlayer(formData: FormData) {
     }
 
     try {
-        // Delete all results associated with the player first
         await prisma.result.deleteMany({
             where: { playerId: id }
         });
 
-        // Then delete the player
         await prisma.player.delete({
             where: { id }
         });

@@ -27,7 +27,7 @@ export function ProgressChart({ data, title, color = "hsl(var(--primary))" }: Pr
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>{title}</h3>
             <div style={{ width: '100%', height: 300 }}>
                 <ResponsiveContainer>
-                    <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                    <LineChart data={data} margin={{ top: 30, right: 20, left: 10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                         <XAxis
                             dataKey="date"
@@ -57,6 +57,7 @@ export function ProgressChart({ data, title, color = "hsl(var(--primary))" }: Pr
                             strokeWidth={3}
                             activeDot={{ r: 8 }}
                             dot={{ fill: color, strokeWidth: 2 }}
+                            label={{ position: 'top', fill: color, fontSize: 12, fontWeight: 600, dy: -5 }}
                         />
                     </LineChart>
                 </ResponsiveContainer>

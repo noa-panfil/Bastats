@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Eye, Edit } from 'lucide-react';
 
 export default async function PlayersPage() {
     let players: any[] = [];
@@ -25,78 +25,100 @@ export default async function PlayersPage() {
                 </Link>
             </div>
 
-            <div className="glass-panel" style={{ overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                        <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                            <th style={{ padding: '1rem', color: 'hsl(var(--text-secondary))', fontWeight: 500 }}>ID</th>
-                            <th style={{ padding: '1rem', color: 'hsl(var(--text-secondary))', fontWeight: 500 }}>Player</th>
-                            <th style={{ padding: '1rem', color: 'hsl(var(--text-secondary))', fontWeight: 500 }}>Status</th>
-                            <th style={{ padding: '1rem', color: 'hsl(var(--text-secondary))', fontWeight: 500, textAlign: 'right' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {players.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} style={{ padding: '3rem', textAlign: 'center', color: 'hsl(var(--text-secondary))' }}>
-                                    No players found. Start by adding one to your team.
-                                </td>
-                            </tr>
-                        ) : (
-                            players.map((player: any) => (
-                                <tr key={player.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }}>
-                                    <td style={{ padding: '1rem', fontFamily: 'monospace', color: 'hsl(var(--text-secondary))' }}>#{player.id}</td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <div style={{
-                                                width: '40px',
-                                                height: '40px',
-                                                borderRadius: '50%',
-                                                background: player.photoUrl ? `url(${player.photoUrl}) center/cover` : 'hsl(var(--surface-highlight))',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: '0.9rem',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                {!player.photoUrl && player.firstName[0]}
-                                            </div>
-                                            <span style={{ fontWeight: 600 }}>{player.firstName}</span>
+            <div className="glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{
+                    display: 'flex',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    background: 'rgba(255,255,255,0.02)',
+                    color: 'hsl(var(--text-secondary))',
+                    fontWeight: 500,
+                    fontSize: '0.9rem'
+                }}>
+                    <div style={{ flex: 1 }}>Player</div>
+                    <div style={{ width: '100px', textAlign: 'right' }}>Actions</div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {players.length === 0 ? (
+                        <div style={{ padding: '3rem', textAlign: 'center', color: 'hsl(var(--text-secondary))' }}>
+                            No players found. Start by adding one to your team.
+                        </div>
+                    ) : (
+                        players.map((player: any) => (
+                            <div key={player.id} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '1rem',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                gap: '1rem'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: 0 }}>
+                                    <div style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        flexShrink: 0,
+                                        borderRadius: '50%',
+                                        background: player.photoUrl ? `url(${player.photoUrl}) center/cover` : 'hsl(var(--surface-highlight))',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.9rem',
+                                        fontWeight: 'bold',
+                                        border: '1px solid rgba(255,255,255,0.1)'
+                                    }}>
+                                        {!player.photoUrl && player.firstName[0]}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {player.firstName}
                                         </div>
-                                    </td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <span style={{
-                                            padding: '0.25rem 0.75rem',
-                                            background: 'rgba(150, 255, 150, 0.1)',
-                                            color: 'hsl(var(--success))',
-                                            borderRadius: '20px',
-                                            fontSize: '0.8rem',
-                                            fontWeight: 600
-                                        }}>Active</span>
-                                    </td>
-                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                                            <Link href={`/players/${player.id}`} style={{
-                                                color: 'hsl(var(--primary))',
-                                                fontWeight: 600,
-                                                fontSize: '0.9rem'
-                                            }}>
-                                                View Stats
-                                            </Link>
-                                            <Link href={`/players/${player.id}/edit`} style={{
-                                                color: 'hsl(var(--text-secondary))',
-                                                fontWeight: 600,
-                                                fontSize: '0.9rem'
-                                            }}>
-                                                Edit
-                                            </Link>
+                                        <div style={{ fontSize: '0.8rem', color: 'hsl(var(--text-secondary))', fontFamily: 'monospace' }}>
+                                            #{player.id} • Active
                                         </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                    <Link
+                                        href={`/players/${player.id}`}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '8px',
+                                            background: 'rgba(50, 150, 255, 0.1)',
+                                            color: 'hsl(var(--primary))',
+                                            transition: '0.2s'
+                                        }}
+                                        title="View Stats"
+                                    >
+                                        <Eye size={18} />
+                                    </Link>
+                                    <Link
+                                        href={`/players/${player.id}/edit`}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '8px',
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            color: 'hsl(var(--text-secondary))',
+                                            transition: '0.2s'
+                                        }}
+                                        title="Edit"
+                                    >
+                                        <Edit size={18} />
+                                    </Link>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
         </main>
     );

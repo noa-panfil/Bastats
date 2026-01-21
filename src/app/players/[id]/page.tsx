@@ -1,12 +1,7 @@
 import { prisma } from '@/lib/prisma';
-import { ProgressChart } from '@/components/ProgressChart';
+import { TeamProgressChart } from '@/components/TeamProgressChart';
 import { AddResultForm } from '@/components/AddResultForm';
 import Link from 'next/link';
-
-interface DataPoint {
-    date: string;
-    value: number;
-}
 
 export default async function PlayerDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -22,6 +17,10 @@ export default async function PlayerDetailsPage({ params }: { params: Promise<{ 
         }
     });
 
+    const allResults = await prisma.result.findMany({
+        include: { exercise: true }
+    });
+
     const exercises = await prisma.exercise.findMany({
         orderBy: { name: 'asc' }
     });
@@ -30,18 +29,127 @@ export default async function PlayerDetailsPage({ params }: { params: Promise<{ 
         return <div className="container" style={{ padding: '4rem' }}>Player not found</div>;
     }
 
-    // Group results by exercise
-    const resultsByExercise = player.results.reduce((acc: Record<string, DataPoint[]>, result: any) => {
-        const exerciseName = result.exercise.name;
-        if (!acc[exerciseName]) {
-            acc[exerciseName] = [];
-        }
-        acc[exerciseName].push({
-            date: result.date.toLocaleDateString(),
-            value: result.value
+    const uniqueExercises = Array.from(new Set(player.results.map(r => r.exerciseId)));
+
+    const chartsData = uniqueExercises.map(exId => {
+        const exercise = exercises.find(e => e.id === exId);
+        const exerciseName = exercise?.name || 'Unknown';
+        const isTime = exercise?.unit === 'seconds';
+
+        const myResults = player.results.filter(r => r.exerciseId === exId)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.id - b.id);
+
+        const teamResults = allResults.filter(r => r.exerciseId === exId)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.id - b.id);
+
+        const teamDayMap = new Map<string, Record<string, number[]>>();
+        teamResults.forEach(r => {
+            const d = r.date.toLocaleDateString();
+            if (!teamDayMap.has(d)) teamDayMap.set(d, {});
+            const entry = teamDayMap.get(d)!;
+            const pid = r.playerId.toString();
+            if (!entry[pid]) entry[pid] = [];
+            entry[pid].push(r.value);
         });
-        return acc;
-    }, {} as Record<string, DataPoint[]>);
+
+        const chartPoints: any[] = [];
+        const processedDates = new Set<string>();
+
+        myResults.forEach(pr => {
+            const dateStr = pr.date.toLocaleDateString();
+            if (processedDates.has(dateStr)) return;
+            processedDates.add(dateStr);
+
+            const myDailyResults = myResults.filter(r => r.date.toLocaleDateString() === dateStr);
+            const teamDailyData = teamDayMap.get(dateStr) || {};
+
+            const loops = myDailyResults.length;
+
+            for (let i = 0; i < loops; i++) {
+                const label = loops > 1 ? `${dateStr} (${i + 1})` : dateStr;
+                const point: any = { date: label };
+
+                point[player.firstName] = myDailyResults[i].value;
+
+                let passageSum = 0;
+                let passageCount = 0;
+                Object.values(teamDailyData).forEach(pValues => {
+                    if (pValues[i] !== undefined) {
+                        passageSum += pValues[i];
+                        passageCount++;
+                    }
+                });
+
+                if (passageCount > 0) {
+                    point.Average = parseFloat((passageSum / passageCount).toFixed(2));
+                }
+
+                chartPoints.push(point);
+            }
+        });
+
+        const latest = myResults[myResults.length - 1];
+        const stats: { label: string; value: string; color: string }[] = [];
+
+        if (latest) {
+            const periods = [
+                { label: '2W', days: 14 },
+                { label: '1M', days: 30 },
+                { label: '3M', days: 90 }
+            ];
+
+            const refDate = new Date(latest.date);
+
+            periods.forEach(p => {
+                const targetDate = new Date(refDate);
+                targetDate.setDate(refDate.getDate() - p.days);
+
+                let closest: typeof latest | null = null;
+                let minDiff = Infinity;
+
+                myResults.forEach(r => {
+                    if (r.id === latest.id) return;
+                    const d = new Date(r.date);
+                    const diff = Math.abs(d.getTime() - targetDate.getTime());
+
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = r;
+                    }
+                });
+
+                const dayDiff = minDiff / (1000 * 3600 * 24);
+
+                if (closest && dayDiff < p.days + 14) {
+                    const current = latest.value;
+                    const past = (closest as any).value;
+                    let pct = ((current - past) / past) * 100;
+
+                    let color = 'hsl(var(--text-secondary))';
+                    const isGood = isTime ? pct < 0 : pct > 0;
+
+                    if (Math.abs(pct) >= 0.1) {
+                        color = isGood ? 'hsl(var(--success))' : 'hsl(var(--error))';
+                    }
+
+                    stats.push({
+                        label: p.label,
+                        value: `${pct > 0 ? '+' : ''}${pct.toFixed(0)}%`,
+                        color
+                    });
+                } else {
+                    stats.push({ label: p.label, value: '-', color: 'hsl(var(--text-secondary))' });
+                }
+            });
+        }
+
+        return {
+            title: exerciseName,
+            data: chartPoints,
+            unit: exercise?.unit,
+            stats
+        };
+    });
 
     return (
         <main className="container animate-fade-in" style={{ padding: '4rem 1.5rem' }}>
@@ -84,14 +192,17 @@ export default async function PlayerDetailsPage({ params }: { params: Promise<{ 
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                {Object.keys(resultsByExercise).length === 0 ? (
+                {chartsData.length === 0 ? (
                     <p style={{ color: 'hsl(var(--text-secondary))' }}>No training data recorded yet.</p>
                 ) : (
-                    Object.entries(resultsByExercise).map(([exerciseName, data]) => (
-                        <ProgressChart
-                            key={exerciseName}
-                            title={exerciseName}
-                            data={data as DataPoint[]}
+                    chartsData.map((chart) => (
+                        <TeamProgressChart
+                            key={chart.title}
+                            title={chart.title}
+                            data={chart.data}
+                            players={[{ id: player.id, name: player.firstName, color: 'hsl(var(--primary))' }]}
+                            unit={chart.unit}
+                            stats={chart.stats}
                         />
                     ))
                 )}

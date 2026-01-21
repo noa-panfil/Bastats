@@ -19,9 +19,10 @@ export function ExerciseSessionLogger({ exercise, players }: { exercise: Exercis
     const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
     const [value, setValue] = useState<string>("");
 
-    // Stopwatch state
+    const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
     const [isRunning, setIsRunning] = useState(false);
-    const [time, setTime] = useState(0); // in milliseconds
+    const [time, setTime] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const isTimerMode = exercise.unit === 'seconds';
@@ -43,7 +44,6 @@ export function ExerciseSessionLogger({ exercise, players }: { exercise: Exercis
 
     const handleStop = () => {
         setIsRunning(false);
-        // Update value input with seconds (2 decimals)
         setValue((time / 1000).toFixed(2));
     };
 
@@ -58,7 +58,6 @@ export function ExerciseSessionLogger({ exercise, players }: { exercise: Exercis
             <h2 style={{ marginBottom: '1.5rem' }}>Log New Session</h2>
 
             <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-                {/* Left: Stopwatch (if applicable) */}
                 {isTimerMode ? (
                     <div style={{
                         background: 'hsl(var(--secondary))',
@@ -116,7 +115,6 @@ export function ExerciseSessionLogger({ exercise, players }: { exercise: Exercis
                     </div>
                 )}
 
-                {/* Right: Form */}
                 <form
                     action={async (formData) => {
                         await addResult(formData);
@@ -143,6 +141,20 @@ export function ExerciseSessionLogger({ exercise, players }: { exercise: Exercis
                                 <option key={p.id} value={p.id}>{p.firstName}</option>
                             ))}
                         </select>
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: 'hsl(var(--text-secondary))' }}>
+                            Date
+                        </label>
+                        <input
+                            type="date"
+                            name="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            required
+                            style={{ fontSize: '1.1rem', padding: '1rem' }}
+                        />
                     </div>
 
                     <div>
