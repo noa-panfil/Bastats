@@ -57,7 +57,7 @@ export function ExerciseSessionLogger({ exercise, players }: { exercise: Exercis
         <div className="glass-panel" style={{ padding: '2rem', marginTop: '3rem' }}>
             <h2 style={{ marginBottom: '1.5rem' }}>Log New Session</h2>
 
-            <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+            <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
                 {/* Left: Stopwatch (if applicable) */}
                 {isTimerMode ? (
                     <div style={{
@@ -67,7 +67,7 @@ export function ExerciseSessionLogger({ exercise, players }: { exercise: Exercis
                         textAlign: 'center'
                     }}>
                         <div style={{
-                            fontSize: '4rem',
+                            fontSize: 'clamp(3rem, 15vw, 4rem)',
                             fontWeight: 700,
                             fontFamily: 'monospace',
                             marginBottom: '1.5rem',
